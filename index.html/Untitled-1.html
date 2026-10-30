@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pastel & Bella | Pastelaria Artesanal Gourmet</title>
+  
+  <!-- SheetJS para importação da planilha ERP Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --off-white: #F7F1E7;
+      --vermelho-terroso: #A83227;
+      --vermelho-queimado: #922B21;
+      --creme-quente: #E8D5A8;
+      --marrom-escuro: #49251F;
+      --branco: #FFFFFF;
+      --gray-100: #F3EFEA;
+      --gray-200: #E5DEC9;
+      --gray-600: #7A6963;
+      --green-success: #27AE60;
+      --red-alert: #C0392B;
+      --yellow-alert: #D4AC0D;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 4px 12px rgba(73, 37, 31, 0.06);
+      --shadow-md: 0 8px 24px rgba(73, 37, 31, 0.12);
+      --font-heading: 'Playfair Display', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--off-white);
+      color: var(--marrom-escuro);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: var(--branco);
+      border-bottom: 2px solid var(--gray-200);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .logo-container { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      background-color: var(--vermelho-terroso);
+      color: var(--branco);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .logo-text h1 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--marrom-escuro); letter-spacing: -0.5px; }
+    .logo-text span { font-size: 0.8rem; color: var(--gray-600); font-weight: 500; }
+
+    .nav-buttons { display: flex; gap: 12px; align-items: center; }
+    .btn-nav {
+      background: var(--gray-100);
+      border: none;
+      color: var(--marrom-escuro);
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover, .btn-nav.active { background: var(--vermelho-terroso); color: var(--branco); }
+    .btn-cart { background: var(--vermelho-terroso); color: var(--branco); position: relative; }
+    .cart-badge {
+      background: var(--marrom-escuro); color: var(--branco);
+      border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+    }
+
+    main { flex: 1; max-width: 1280px; width: 100%; margin: 0 auto; padding: 2rem; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    .section-title { font-family: var(--font-heading); font-size: 2rem; color: var(--marrom-escuro); margin-bottom: 0.5rem; }
+    .section-subtitle { color: var(--gray-600); margin-bottom: 2rem; font-size: 1rem; }
+
+    .category-filter { display: flex; gap: 10px; margin-bottom: 2rem; overflow-x: auto; padding-bottom: 5px; }
+    .filter-chip {
+      background: var(--branco); border: 1px solid var(--gray-200);
+      padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; color: var(--gray-600); transition: all 0.2s; white-space: nowrap;
+    }
+    .filter-chip.active, .filter-chip:hover { background: var(--marrom-escuro); color: var(--branco); border-color: var(--marrom-escuro); }
+
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+    .product-card {
+      background: var(--branco); border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm); border: 1px solid rgba(229, 222, 201, 0.5);
+      display: flex; flex-direction: column; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .product-img-wrapper { width: 100%; height: 180px; overflow: hidden; background: var(--gray-100); position: relative; }
+    .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .product-card:hover .product-img { transform: scale(1.05); }
+
+    .promo-tag {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--red-alert); color: var(--branco);
+      padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+      box-shadow: var(--shadow-sm); animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    .product-info { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+    .product-category { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--vermelho-terroso); font-weight: 700; margin-bottom: 6px; }
+    .product-name { font-family: var(--font-heading); font-size: 1.15rem; color: var(--marrom-escuro); margin-bottom: 8px; }
+    .product-desc { font-size: 0.85rem; color: var(--gray-600); margin-bottom: 16px; flex: 1; }
+    
+    .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .price-box { display: flex; flex-direction: column; }
+    .old-price { font-size: 0.8rem; color: var(--gray-600); text-decoration: line-through; }
+    .product-price { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--marrom-escuro); }
+    .product-price.promo-highlight { color: var(--red-alert); }
+
+    .btn-add {
+      background: var(--vermelho-terroso); color: var(--branco); border: none;
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-add:hover { background: var(--vermelho-queimado); }
+
+    /* PAINEL FUNCIONÁRIO / ERP */
+    .admin-dashboard { display: flex; flex-direction: column; gap: 2rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .kpi-card { background: var(--branco); padding: 20px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 5px solid var(--vermelho-terroso); }
+    .kpi-title { font-size: 0.85rem; color: var(--gray-600); font-weight: 600; margin-bottom: 6px; }
+    .kpi-value { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; color: var(--marrom-escuro); }
+
+    .admin-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    @media(max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .card-panel { background: var(--branco); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid rgba(229, 222, 201, 0.5); }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .panel-title { font-family: var(--font-heading); font-size: 1.25rem; color: var(--marrom-escuro); }
+
+    /* Gráfico Simulado no Painel */
+    .chart-container { height: 200px; display: flex; align-items: flex-end; gap: 16px; padding-top: 20px; border-bottom: 2px solid var(--gray-200); justify-content: space-around; }
+    .chart-bar-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+    .chart-bar { width: 100%; max-width: 45px; background: var(--vermelho-terroso); border-radius: 6px 6px 0 0; transition: height 0.5s; }
+    .chart-label { font-size: 0.75rem; color: var(--gray-600); font-weight: 600; }
+
+    /* Alertas de Validade */
+    .alert-item { background: #FDF3F2; border: 1px solid #F5C6CB; border-radius: var(--radius-sm); padding: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .alert-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; color: var(--red-alert); }
+    .alert-body { font-size: 0.9rem; color: var(--marrom-escuro); font-weight: 600; }
+    .btn-promo-auto {
+      background: var(--vermelho-terroso); color: var(--branco); border: none; padding: 8px 12px;
+      border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; align-self: flex-start; transition: background 0.2s;
+    }
+    .btn-promo-auto:hover { background: var(--vermelho-queimado); }
+
+    /* Tabela de Pedidos */
+    .orders-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .orders-table th, .orders-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--gray-100); }
+    .orders-table th { background: var(--gray-100); color: var(--marrom-escuro); font-weight: 700; }
+
+    .status-select {
+      background: var(--creme-quente); color: var(--marrom-escuro); border: none;
+      padding: 6px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* CARRINHO E CHECKOUT COM DADOS DO CLIENTE */
+    .cart-drawer {
+      position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+      background: var(--branco); box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+      z-index: 1000; display: flex; flex-direction: column; transition: right 0.3s ease;
+    }
+    .cart-drawer.open { right: 0; }
+    .cart-header { padding: 20px; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; }
+    .cart-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    
+    .checkout-form { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; border-top: 1px solid var(--gray-200); padding-top: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--marrom-escuro); }
+    .form-control { padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); font-family: var(--font-body); font-size: 0.9rem; }
+
+    .cart-item { display: flex; gap: 12px; align-items: center; border-bottom: 1px solid var(--gray-100); padding-bottom: 12px; }
+    .cart-item-img { width: 60px; height: 60px; border-radius: var(--radius-sm); object-fit: cover; }
+    .cart-item-info { flex: 1; }
+    .cart-item-title { font-weight: 700; font-size: 0.95rem; color: var(--marrom-escuro); }
+    .cart-item-price { color: var(--vermelho-terroso); font-weight: 700; font-size: 0.9rem; }
+    .cart-item-controls { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .qty-btn { background: var(--gray-100); border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+
+    .cart-footer { padding: 20px; border-top: 1px solid var(--gray-200); background: var(--off-white); }
+    .cart-total { display: flex; justify-content: space-between; font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
+    .btn-checkout {
+      background: var(--vermelho-terroso); color: var(--branco); border: none; width: 100%;
+      padding: 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-checkout:hover { background: var(--vermelho-queimado); }
+
+    .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; display: none; }
+    .overlay.open { display: block; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--marrom-escuro); color: var(--branco);
+      padding: 12px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); z-index: 2000;
+      transform: translateY(100px); opacity: 0; transition: all 0.3s ease; font-weight: 600;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon"><i class="fas fa-utensils"></i></div>
+      <div class="logo-text">
+        <h1>Pastel & Bella</h1>
+        <span>Pastelaria Artesanal Gourmet</span>
+      </div>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn-nav active" onclick="switchView('cardapio')"><i class="fas fa-book-open"></i> Cardápio</button>
+      <button class="btn-nav" onclick="switchView('admin')"><i class="fas fa-chart-line"></i> Painel Funcionário / ERP</button>
+      <button class="btn-nav btn-cart" onclick="toggleCart()"><i class="fas fa-shopping-bag"></i> Carrinho <span class="cart-badge" id="cartCount">0</span></button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main>
+
+    <!-- VIEW: CARDÁPIO -->
+    <section id="view-cardapio" class="view-section active">
+      <h2 class="section-title">Nosso Cardápio Artesanal</h2>
+      <p class="section-subtitle">Escolha entre nossos pastéis salgados, doces gourmet, bebidas, sucos naturais e acompanhamentos.</p>
+
+      <div class="category-filter">
+        <button class="filter-chip active" onclick="filterCategory('todos')">Todos os Produtos</button>
+        <button class="filter-chip" onclick="filterCategory('Salgado')">Pastéis Salgados</button>
+        <button class="filter-chip" onclick="filterCategory('Doce')">Pastéis Doces</button>
+        <button class="filter-chip" onclick="filterCategory('Bebida')">Bebidas & Sucos</button>
+        <button class="filter-chip" onclick="filterCategory('Sobremesa')">Doces & Trufas</button>
+      </div>
+
+      <div class="products-grid" id="productsGrid"></div>
+    </section>
+
+    <!-- VIEW: PAINEL FUNCIONÁRIO / ERP -->
+    <section id="view-admin" class="view-section">
+      <h2 class="section-title">Painel de Gestão & ERP</h2>
+      <p class="section-subtitle">Faturamento financeiro, gráficos diários, alertas de validade de lotes e controle de pedidos de clientes.</p>
+
+      <div class="admin-dashboard">
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Faturamento do Dia</div>
+            <div class="kpi-value" id="kpiFaturamento">R$ 1.840,50</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: var(--green-success);">
+            <div class="kpi-title">Total de Pedidos Hoje</div>
+            <div class="kpi-value" id="kpiTotalPedidos">48</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: var(--yellow-alert);">
+            <div class="kpi-title">Lotes Próximos do Vencimento</div>
+            <div class="kpi-value">2 lotes</div>
+          </div>
+          <div class="kpi-card" style="border-left-color: var(--red-alert);">
+            <div class="kpi-title">Perda Estimada (Prevenção)</div>
+            <div class="kpi-value">R$ 45,00</div>
+          </div>
+        </div>
+
+        <div class="admin-grid">
+          <!-- Coluna Esquerda: Pedidos ao Vivo com nome do cliente e mudança de status -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3 class="panel-title"><i class="fas fa-receipt"></i> Pedidos em Tempo Real</h3>
+              <span style="font-size: 0.85rem; color: var(--gray-600);">Sincronizado com o Caixa</span>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Nº / Cliente</th>
+                    <th>Itens & Endereço</th>
+                    <th>Pagamento</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="liveOrdersTable"></tbody>
+              </table>
+            </div>
+
+            <!-- Gráfico de Faturamento da Semana -->
+            <div style="margin-top: 30px; border-top: 1px solid var(--gray-200); padding-top: 20px;">
+              <h4 style="font-family: var(--font-heading); color: var(--marrom-escuro); margin-bottom: 10px;"><i class="fas fa-chart-bar"></i> Faturamento dos Últimos Dias</h4>
+              <div class="chart-container">
+                <div class="chart-bar-wrapper"><div class="chart-bar" style="height: 60%;"></div><span class="chart-label">Seg</span></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" style="height: 80%;"></div><span class="chart-label">Ter</span></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" style="height: 70%;"></div><span class="chart-label">Qua</span></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" style="height: 95%;"></div><span class="chart-label">Qui</span></div>
+                <div class="chart-bar-wrapper"><div class="chart-bar" style="height: 100%; background: var(--green-success);"></div><span class="chart-label">Sex (Hoje)</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coluna Direita: Alertas de Validade & Promoções -->
+          <div class="card-panel">
+            <div class="panel-header">
+              <h3 class="panel-title"><i class="fas fa-lightbulb"></i> Validade & Baixa Saída</h3>
+            </div>
+
+            <div class="alert-item">
+              <div class="alert-header">
+                <span><i class="fas fa-exclamation-triangle"></i> Vencimento Próximo</span>
+                <span>Vence em 2 dias</span>
+              </div>
+              <div class="alert-body">Frango Desfiado (Lote LOT-002) — 4kg</div>
+              <button class="btn-promo-auto" onclick="aplicarPromocaoItem('Pastel de Frango com Queijo')"><i class="fas fa-bolt"></i> Criar Super Promoção</button>
+            </div>
+
+            <div class="alert-item">
+              <div class="alert-header">
+                <span><i class="fas fa-exclamation-triangle"></i> Menor Saída / Estoque</span>
+                <span>Baixa rotação</span>
+              </div>
+              <div class="alert-body">Suco Natural de Acerola 400ml</div>
+              <button class="btn-promo-auto" onclick="aplicarPromocaoItem('Suco de Acerola')"><i class="fas fa-bolt"></i> Criar Super Promoção</button>
+            </div>
+
+            <!-- Importar Planilha ERP -->
+            <div style="margin-top: 20px; border-top: 1px solid var(--gray-200); padding-top: 16px;">
+              <label style="background: var(--vermelho-terroso); color: white; padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem;">
+                <i class="fas fa-file-excel"></i> Importar Planilha ERP (.xlsx)
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="lerPlanilhaExcel(event)">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CARRINHO DRAWER COM DADOS DO CLIENTE E PAGAMENTO -->
+  <div class="overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3 style="font-family: var(--font-heading); color: var(--marrom-escuro);">Seu Carrinho & Pedido</h3>
+      <button onclick="toggleCart()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="cart-body" id="cartItemsList">
+      <p style="color: var(--gray-600); text-align: center; margin-top: 20px;">O seu carrinho está vazio.</p>
+    </div>
+
+    <!-- Formulário do Cliente -->
+    <div style="padding: 0 20px;">
+      <div class="checkout-form">
+        <div class="form-group">
+          <label>Seu Nome Completo:</label>
+          <input type="text" id="clienteNome" class="form-control" placeholder="Ex: Maria Silva">
+        </div>
+        <div class="form-group">
+          <label>Endereço de Entrega:</label>
+          <input type="text" id="clienteEndereco" class="form-control" placeholder="Ex: Rua das Flores, 123">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento:</label>
+          <select id="clientePagamento" class="form-control">
+            <option value="Pix">Pix (Aprovação imediata)</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Dinheiro">Dinheiro (Levar troco)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total:</span>
+        <span id="cartTotalPrice">R$ 0,00</span>
+      </div>
+      <button class="btn-checkout" onclick="finalizarPedido()">Finalizar Pedido Agora</button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toastMessage">Ação realizada com sucesso!</div>
+
+  <script>
+    // BASE DE DADOS COMPLETA DA PASTEL & BELLA COM FOTOS REAIS E SUCOS ADICIONADOS
+    const produtosCardapio = [
+      // Salgados
+      { id: 1, nome: "Pastel de Frango", categoria: "Salgado", preco: 12.00, desc: "Frango desfiado temperado com ervas finas.", img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=600&q=80" },
+      { id: 2, nome: "Pastel de Frango com Queijo", categoria: "Salgado", preco: 14.00, desc: "Frango suculento com muçarela derretida.", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" },
+      { id: 3, nome: "Pastel de Pizza", categoria: "Salgado", preco: 13.00, desc: "Muçarela, presunto, tomate fresco e orégano.", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" },
+      { id: 4, nome: "Pastel de Bauru", categoria: "Salgado", preco: 13.00, desc: "Presunto, queijo muçarela e rodelas de tomate.", img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" },
+      { id: 5, nome: "Pastel de Carne", categoria: "Salgado", preco: 13.50, desc: "Carne moída selecionada com tempero da casa.", img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=600&q=80" },
+      { id: 6, nome: "Pastel de Queijo", categoria: "Salgado", preco: 12.00, desc: "Muçarela artesanal puxa-puxa.", img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da280?auto=format&fit=crop&w=600&q=80" },
+      { id: 7, nome: "Pastel de Brócolis", categoria: "Salgado", preco: 11.00, desc: "Brócolis frescos refogados no alho e azeite.", img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80" },
+      { id: 8, nome: "Pastel de Brócolis com Queijo", categoria: "Salgado", preco: 13.50, desc: "Brócolis selecionados com cremosa muçarela.", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" },
+      { id: 9, nome: "Pastel de Palmito", categoria: "Salgado", preco: 15.00, desc: "Palmito pupunha picado com toque cremoso.", img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=600&q=80" },
+      { id: 10, nome: "Pastel de Palmito com Bacon", categoria: "Salgado", preco: 17.00, desc: "Palmito macio combinado com bacon crocante.", img: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=600&q=80" },
+      { id: 11, nome: "Pastel de Calabresa", categoria: "Salgado", preco: 12.50, desc: "Calabresa moída defumada com cebola caramelizada.", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" },
+      { id: 12, nome: "Pastel de Calabresa com Queijo", categoria: "Salgado", preco: 14.50, desc: "Calabresa defumada com generosa camada de queijo.", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80" },
+
+      // Doces
+      { id: 13, nome: "Pastel de Chocolate com Morango", categoria: "Doce", preco: 16.00, desc: "Chocolate nobre cremoso com morangos frescos.", img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80" },
+      { id: 14, nome: "Pastel de Nutella", categoria: "Doce", preco: 18.00, desc: "Recheado com pura Nutella original.", img: "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80" },
+      { id: 15, nome: "Pastel de Leite Ninho com Nutella", categoria: "Doce", preco: 19.00, desc: "Creme de Leite Ninho com cobertura de Nutella.", img: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=600&q=80" },
+      { id: 16, nome: "Pastel de Doce de Leite", categoria: "Doce", preco: 13.00, desc: "Doce de leite artesanal argentino.", img: "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80" },
+      { id: 17, nome: "Pastel de Romeu e Julieta", categoria: "Doce", preco: 14.00, desc: "Goiabada cremosa com queijo muçarela.", img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80" },
+
+      // Bebidas & Sucos (incluindo Acerola, Caju, Maracujá, etc.)
+      { id: 18, nome: "Coca-Cola Lata 350ml", categoria: "Bebida", preco: 6.50, desc: "Gelada, lata 350ml.", img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80" },
+      { id: 19, nome: "Guaraná Antarctica 350ml", categoria: "Bebida", preco: 6.00, desc: "O verdadeiro sabor do Brasil.", img: "https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=600&q=80" },
+      { id: 20, nome: "Fanta Laranja / Uva", categoria: "Bebida", preco: 6.00, desc: "Refrigerante gelado.", img: "https://images.unsplash.com/photo-1624552184280-9e9632bbeee9?auto=format&fit=crop&w=600&q=80" },
+      { id: 21, nome: "Água com/sem Gás", categoria: "Bebida", preco: 4.00, desc: "Garrafa 500ml.", img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=600&q=80" },
+      { id: 22, nome: "Suco de Laranja", categoria: "Bebida", preco: 8.50, desc: "Feito com laranjas frescas espremidas na hora.", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80" },
+      { id: 23, nome: "Suco de Acerola", categoria: "Bebida", preco: 9.00, desc: "Rico em vitamina C, polpa natural de acerola.", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80" },
+      { id: 24, nome: "Suco de Caju", categoria: "Bebida", preco: 9.00, desc: "Sabor tropical e refrescante.", img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=600&q=80" },
+      { id: 25, nome: "Suco de Maracujá", categoria: "Bebida", preco: 9.50, desc: "Suco natural calmante e delicioso.", img: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&w=600&q=80" },
+      { id: 26, nome: "Suco de Abacaxi com Hortelã", categoria: "Bebida", preco: 10.00, desc: "Abacaxi batido com folhas frescas de hortelã.", img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80" },
+
+      // Sobremesas
+      { id: 27, nome: "Sonho de Valsa", categoria: "Sobremesa", preco: 3.50, desc: "Bombom recheado.", img: "https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=600&q=80" },
+      { id: 28, nome: "Trufa de Nutella", categoria: "Sobremesa", preco: 6.00, desc: "Trufa artesanal recheada com Nutella.", img: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=600&q=80" },
+      { id: 29, nome: "Trufa de Brigadeiro", categoria: "Sobremesa", preco: 5.50, desc: "Brigadeiro gourmet envolto em chocolate.", img: "https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=600&q=80" }
+    ];
+
+    let carrinho = [];
+    let pedidosAoVivo = [
+      { id: 48, cliente: "Carlos Eduardo", endereco: "Rua das Palmeiras, 45", pagamento: "Pix", itens: "Pastel de Frango com Queijo (2x), Coca-Cola", total: "R$ 34,50", status: "Em Preparo" },
+      { id: 47, cliente: "Mariana Souza", endereco: "Av. Brasil, 1500", pagamento: "Cartão de Crédito", itens: "Pastel de Carne (1x), Suco de Laranja", total: "R$ 22,00", status: "Pronto" }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderizarProdutos(produtosCardapio);
+      renderizarPedidosAdmin();
+      atualizarContadorCarrinho();
+    });
+
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.btn-nav').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    function renderizarProdutos(lista) {
+      const grid = document.getElementById('productsGrid');
+      grid.innerHTML = '';
+
+      lista.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        
+        let precoHtml = `<span class="product-price">R$ ${p.preco.toFixed(2).replace('.', ',')}</span>`;
+        if (p.promo && p.precoAntigo) {
+          precoHtml = `
+            <div class="price-box">
+              <span class="old-price">De R$ ${p.precoAntigo.toFixed(2).replace('.', ',')}</span>
+              <span class="product-price promo-highlight">Por R$ ${p.preco.toFixed(2).replace('.', ',')}</span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="product-img-wrapper">
+            ${p.promo ? '<span class="promo-tag"><i class="fas fa-tag"></i> OFERTA PERTO VENCIMENTO</span>' : ''}
+            <img src="${p.img}" alt="${p.nome}" class="product-img">
+          </div>
+          <div class="product-info">
+            <span class="product-category">${p.categoria}</span>
+            <h3 class="product-name">${p.nome}</h3>
+            <p class="product-desc">${p.desc}</p>
+            <div class="product-footer">
+              ${precoHtml}
+              <button class="btn-add" onclick="adicionarAoCarrinho(${p.id})"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      if (cat === 'todos') {
+        renderizarProdutos(produtosCardapio);
+      } else {
+        const filtrados = produtosCardapio.filter(p => p.categoria === cat);
+        renderizarProdutos(filtrados);
+      }
+    }
+
+    function toggleCart() {
+      document.getElementById('cartDrawer').classList.toggle('open');
+      document.getElementById('cartOverlay').classList.toggle('open');
+    }
+
+    function adicionarAoCarrinho(id) {
+      const produto = produtosCardapio.find(p => p.id === id);
+      const itemExistente = carrinho.find(i => i.id === id);
+
+      if (itemExistente) {
+        itemExistente.qtd++;
+      } else {
+        carrinho.push({ ...produto, qtd: 1 });
+      }
+
+      atualizarCarrinho();
+      mostrarToast(`Adicionado: ${produto.nome}`);
+    }
+
+    function atualizarCarrinho() {
+      const listaEl = document.getElementById('cartItemsList');
+      const badgeEl = document.getElementById('cartCount');
+      const totalEl = document.getElementById('cartTotalPrice');
+
+      badgeEl.innerText = carrinho.reduce((acc, item) => acc + item.qtd, 0);
+
+      if (carrinho.length === 0) {
+        listaEl.innerHTML = '<p style="color: var(--gray-600); text-align: center; margin-top: 20px;">O seu carrinho está vazio.</p>';
+        totalEl.innerText = 'R$ 0,00';
+        return;
+      }
+
+      listaEl.innerHTML = '';
+      let total = 0;
+
+      carrinho.forEach(item => {
+        total += item.preco * item.qtd;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <img src="${item.img}" class="cart-item-img">
+          <div class="cart-item-info">
+            <div class="cart-item-title">${item.nome}</div>
+            <div class="cart-item-price">R$ ${(item.preco * item.qtd).toFixed(2).replace('.', ',')}</div>
+            <div class="cart-item-controls">
+              <button class="qty-btn" onclick="alterarQtd(${item.id}, -1)">-</button>
+              <span>${item.qtd}</span>
+              <button class="qty-btn" onclick="alterarQtd(${item.id}, 1)">+</button>
+            </div>
+          </div>
+        `;
+        listaEl.appendChild(div);
+      });
+
+      totalEl.innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+
+    function alterarQtd(id, delta) {
+      const item = carrinho.find(i => i.id === id);
+      if (!item) return;
+      item.qtd += delta;
+      if (item.qtd <= 0) {
+        carrinho = carrinho.filter(i => i.id !== id);
+      }
+      atualizarCarrinho();
+    }
+
+    // FINALIZAR PEDIDO COM DADOS DO CLIENTE E PAGAMENTO
+    function finalizarPedido() {
+      if (carrinho.length === 0) {
+        alert("O seu carrinho está vazio!");
+        return;
+      }
+
+      const nome = document.getElementById('clienteNome').value.trim();
+      const endereco = document.getElementById('clienteEndereco').value.trim();
+      const pagamento = document.getElementById('clientePagamento').value;
+
+      if (!nome || !endereco) {
+        alert("Por favor, preencha o seu Nome e Endereço para entrega!");
+        return;
+      }
+
+      const totalPedido = carrinho.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
+      const resumoItens = carrinho.map(i => `${i.nome} (${i.qtd}x)`).join(', ');
+      const novoId = Math.floor(Math.random() * 900) + 100;
+
+      pedidosAoVivo.unshift({
+        id: novoId,
+        cliente: nome,
+        endereco: endereco,
+        pagamento: pagamento,
+        itens: resumoItens,
+        total: `R$ ${totalPedido.toFixed(2).replace('.', ',')}`,
+        status: "Em Preparo"
+      });
+
+      renderizarPedidosAdmin();
+      
+      carrinho = [];
+      atualizarCarrinho();
+      toggleCart();
+      
+      document.getElementById('clienteNome').value = '';
+      document.getElementById('clienteEndereco').value = '';
+
+      mostrarToast(`Pedido #${novoId} de ${nome} finalizado com sucesso!`);
+      document.getElementById('kpiTotalPedidos').innerText = parseInt(document.getElementById('kpiTotalPedidos').innerText) + 1;
+    }
+
+    function renderizarPedidosAdmin() {
+      const tbody = document.getElementById('liveOrdersTable');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      pedidosAoVivo.forEach((ped, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>#${ped.id}</strong><br><span style="font-size:0.8rem; color:var(--vermelho-terroso);">${ped.cliente}</span></td>
+          <td>${ped.itens}<br><small style="color:var(--gray-600);"><i class="fas fa-map-marker-alt"></i> ${ped.endereco}</small></td>
+          <td><span style="font-size:0.8rem; font-weight:600; background:var(--gray-100); padding:3px 8px; border-radius:6px;">${ped.pagamento}</span></td>
+          <td><strong>${ped.total}</strong></td>
+          <td>
+            <select class="status-select" onchange="atualizarStatusPedido(${index}, this.value)">
+              <option value="Em Preparo" ${ped.status === 'Em Preparo' ? 'selected' : ''}>Em Preparo</option>
+              <option value="Pronto" ${ped.status === 'Pronto' ? 'selected' : ''}>Pronto</option>
+              <option value="Em Entrega" ${ped.status === 'Em Entrega' ? 'selected' : ''}>Em Entrega</option>
+              <option value="Concluído" ${ped.status === 'Concluído' ? 'selected' : ''}>Concluído</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function atualizarStatusPedido(index, novoStatus) {
+      pedidosAoVivo[index].status = novoStatus;
+      mostrarToast(`Status do pedido #${pedidosAoVivo[index].id} atualizado para: ${novoStatus}`);
+    }
+
+    // APLICAR PROMOÇÃO CHAMATIVA (DE R$ X,XX POR R$ Y,YY)
+    function aplicarPromocaoItem(nomeProduto) {
+      const prod = produtosCardapio.find(p => p.nome === nomeProduto);
+      if (prod) {
+        if (!prod.promo) {
+          prod.precoAntigo = prod.preco;
+          prod.preco = prod.preco * 0.75; // 25% de desconto agressivo perto da validade
+          prod.promo = true;
+        }
+        renderizarProdutos(produtosCardapio);
+        mostrarToast(`Alerta de Validade: Super promoção aplicada em ${prod.nome}!`);
+      }
+    }
+
+    function lerPlanilhaExcel(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        mostrarToast("Planilha ERP de Validades importada com sucesso!");
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function mostrarToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+  </script>
+</body>
+</html>
